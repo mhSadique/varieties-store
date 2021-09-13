@@ -4,6 +4,8 @@ const loadProducts = () => {
   showProducts(data);
 };
 
+const modalContainer = document.getElementById('modal');
+const modalBtn = document.getElementById('details-btn');
 
 // show all product in UI 
 const showProducts = (products) => {
@@ -14,13 +16,17 @@ const showProducts = (products) => {
     div.classList.add("product");
     div.innerHTML = `<div class="single-product">
       <div>
-    <img class="product-image" src=${image}></img>
+    <img class="product-image" src=${product.image}></img>
       </div>
       <h3>${product.title}</h3>
       <p>Category: ${product.category}</p>
+      <div class='rating'>
+        <span>Average Rating - ${product.rating.rate}</span>
+        <span>Total Ratings - ${product.rating.count}</span>
+      </div>
       <h2>Price: $ ${product.price}</h2>
       <button onclick="addToCart(${product.id},${product.price})" id="addToCart-btn" class="buy-now btn btn-success">add to cart</button>
-      <button id="details-btn" class="btn btn-danger">Details</button></div>
+      <button onclick="showProductInfo(${product.id})" id="details-btn" class="btn btn-danger">Details</button></div>
       `;
     document.getElementById("all-products").appendChild(div);
   }
@@ -31,12 +37,14 @@ const addToCart = (id, price) => {
   updatePrice("price", price);
 
   updateTaxAndCharge();
+  updateTotal();
   document.getElementById("total-Products").innerText = count;
 };
 
 const getInputValue = (id) => {
   const element = document.getElementById(id).innerText;
-  const converted = parseInt(element);
+  // const converted = parseInt(element);
+  const converted = parseFloat(element);
   return converted;
 };
 
@@ -45,7 +53,8 @@ const updatePrice = (id, value) => {
   const convertedOldPrice = getInputValue(id);
   const convertPrice = parseFloat(value);
   const total = convertedOldPrice + convertPrice;
-  document.getElementById(id).innerText = Math.round(total);
+  // document.getElementById(id).innerText = Math.round(total);
+  document.getElementById(id).innerText = +total.toFixed(2);
 };
 
 // set innerText function
@@ -75,6 +84,37 @@ const updateTotal = () => {
   const grandTotal =
     getInputValue("price") + getInputValue("delivery-charge") +
     getInputValue("total-tax");
-  document.getElementById("total").innerText = grandTotal;
+  const grandTotalSorted = grandTotal.toFixed(2);
+  document.getElementById("total").innerText = grandTotalSorted;
 };
 loadProducts();
+
+
+
+function showProductInfo(id) {
+  fetch(`https://fakestoreapi.com/products/${id}`)
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+      const modal = document.createElement('div');
+      modal.classList.add('mymodal');
+      modal.innerHTML = `
+        <div class="mymodal-content">
+          <span class="close" id="close-${id}">&times;</span>
+          <h2>${data.title}</h2>
+          <hr>
+          <p>${data.description}</p>
+        </div>`;
+        modalContainer.append(modal);
+        let span = document.getElementById(`close-${id}`);
+        span.onclick = function() {
+          modal.style.display = "none";
+        };
+
+        window.onclick = function(event) {
+          if (event.target == modal) {
+            modal.style.display = "none";
+          }
+        }
+    })
+}
